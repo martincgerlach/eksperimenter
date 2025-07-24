@@ -215,6 +215,37 @@
       min-height: 1.2em;
       text-align: center;
     }
+
+/* 📱 Mobilvenlig styling */
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+
+      .form-container {
+        flex-direction: column;
+      }
+
+      todo-form input[type="text"],
+      todo-form button {
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      .category {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+      }
+
+      #new-category-input {
+        font-size: 1rem;
+      }
+
+      #theme-toggle {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
