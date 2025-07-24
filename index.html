@@ -1,499 +1,478 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<link rel="icon" href="favicon.png" type="image/png" />
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Todo Liste med Kategorier & Dark Mode</title>
-<style>
-  :root {
-    --light-bg: linear-gradient(135deg, #e0eaff, #f7f9ff);
-    --light-text: #222;
-    --dark-bg: #121212;
-    --dark-text: #eee;
-    --dark-input-bg: #000;
-    --accent-color: #3b5bff;
-    --danger-color: #ff4d4d;
-  }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 700px;
-    margin: 2rem auto;
-    padding: 1rem;
-    background: var(--light-bg);
-    color: var(--light-text);
-    border-radius: 10px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-  body.dark-mode {
-    background: var(--dark-bg);
-    color: var(--dark-text);
-  }
-  h1 {
-    text-align: center;
-    color: var(--accent-color);
-  }
-  .hero-intro {
-    text-align: center;
-    margin-bottom: 2rem;
-    animation: fadeIn 1.5s ease forwards;
-    opacity: 0;
-  }
-  @keyframes fadeIn {
-    to { opacity: 1; }
-  }
-  #theme-toggle {
-    display: block;
-    margin: 1rem auto;
-    padding: 0.5rem 1rem;
-    border: none;
-    background: var(--accent-color);
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  #category-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  #categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-  .category {
-    background-color: var(--accent-color);
-    color: white;
-    border-radius: 20px;
-    padding: 0.3rem 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    cursor: pointer;
-  }
-  .category.active {
-    background-color: #2a46d8;
-  }
-  .category span {
-    font-weight: bold;
-  }
-  .category button {
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0;
-    margin-left: 0.2rem;
-    user-select: none;
-  }
-  #new-category-input {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-    outline-offset: 0;
-  }
-  body.dark-mode #new-category-input {
-    background-color: var(--dark-input-bg);
-    color: var(--dark-text);
-    border: 1px solid white;
-  }
-  #active-category-label {
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-  }
-  todo-form, todo-list {
-    display: block;
-    margin-bottom: 1rem;
-  }
-  todo-form .form-container {
-    display: flex;
-    gap: 0.5rem;
-  }
-  todo-form input[type="text"] {
-    flex: 1;
-    padding: 0.6rem;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: inherit;
-    color: inherit;
-    outline-offset: 0;
-  }
-  body.dark-mode todo-form input[type="text"] {
-    background-color: var(--dark-input-bg);
-    color: var(--dark-text);
-    border: 1px solid white;
-  }
-  todo-form button {
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  todo-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  todo-task {
-    display: block;
-    background: #f0f4ff;
-    margin-bottom: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-left: 4px solid var(--accent-color);
-    border-radius: 6px;
-    transition: 0.3s;
-    animation: fadeIn 0.3s ease-in-out;
-    color: #222;
-  }
-  body.dark-mode todo-task {
-    background: #222;
-    color: var(--dark-text);
-    border-left-color: var(--accent-color);
-  }
-  todo-task.done {
-    text-decoration: line-through;
-    color: gray;
-    opacity: 0.7;
-  }
-  body.dark-mode todo-task.done {
-    color: #999;
-    opacity: 0.7;
-  }
-  todo-task .container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  todo-task input[type="checkbox"] {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-  }
-  todo-task span.task-text {
-    flex: 1;
-    user-select: none;
-  }
-  todo-task button.time-btn,
-  todo-task button.delete-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    user-select: none;
-    padding: 0;
-    margin-left: 0.3rem;
-    line-height: 1;
-    transition: color 0.3s ease;
-  }
-  todo-task button.time-btn:hover {
-    color: #1a2fcc;
-  }
-  todo-task button.delete-btn {
-    color: var(--danger-color);
-  }
-  todo-task button.delete-btn:hover {
-    color: #ff0000;
-  }
-  todo-task span.time {
-    font-size: 0.85rem;
-    color: #555;
-    user-select: none;
-    margin-left: 0.5rem;
-    white-space: nowrap;
-  }
-  body.dark-mode todo-task span.time {
-    color: #bbb;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-</style>
+  <link rel="icon" href="favicon.png" type="image/x-icon" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo Web Components Demo</title>
+  <style>
+    :root {
+      --light-bg: linear-gradient(135deg, #e0eaff, #f7f9ff);
+      --light-text: #222;
+      --dark-bg: #121212;
+      --dark-text: #eee;
+      --dark-input-bg: #000;
+      --task-outline-color: black;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: var(--light-bg);
+      color: var(--light-text);
+      border-radius: 10px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      --task-outline-color: black;
+      text-align: center;
+    }
+
+    body.dark-mode {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+      --task-outline-color: white;
+    }
+
+    h1 {
+      margin: 0;
+      color: black;
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode h1 {
+      color: #82aaff;
+    }
+
+    .hero-intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      animation: fadeIn 1.5s ease forwards;
+      opacity: 0;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: inherit;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    #theme-toggle {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: #3b5bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    #category-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    #categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .category {
+      background-color: #3b5bff;
+      color: white;
+      border-radius: 20px;
+      padding: 0.3rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .category.active {
+      background-color: transparent;
+      color: inherit;
+      outline: 2px solid black;
+    }
+
+    body.dark-mode .category.active {
+      outline: 2px solid white !important;
+    }
+
+    .category span {
+      font-weight: bold;
+    }
+
+    .category button {
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+    }
+
+    #new-category-input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.3s ease, outline-color 0.3s ease;
+    }
+
+    body.dark-mode #new-category-input {
+      background-color: var(--dark-input-bg);
+      color: #eee;
+      border: 1px solid white;
+      outline: 1px solid white;
+    }
+
+    #active-category-label {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      outline: 1.5px solid black;
+      border-radius: 20px;
+      font-weight: 600;
+      user-select: none;
+      text-align: center;
+      max-width: max-content;
+      margin: 1rem auto;
+    }
+
+    body.dark-mode #active-category-label {
+      color: white;
+      outline: 1.5px solid white;
+    }
+
+    todo-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-container {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    todo-form input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: inherit;
+      color: inherit;
+      transition: border-color 0.3s ease, outline-color 0.3s ease;
+    }
+
+    body.dark-mode todo-form input[type="text"] {
+      border: 1px solid white;
+      outline: 1px solid white;
+    }
+
+    todo-form button {
+      background-color: #3b5bff;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    todo-form button:hover {
+      background-color: #2a46d8;
+    }
+
+    todo-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
   <section class="hero-intro">
     <h1>📝 Min To-Do Liste</h1>
-    <p>Organiser dine opgaver og kategorier nemt og hurtigt.</p>
+    <p class="subtitle">Organiser dine opgaver og kategorier nemt og hurtigt.</p>
+    <button id="theme-toggle">🌘 Skift Tema</button>
   </section>
-
-  <button id="theme-toggle">🌘 Skift Tema</button>
 
   <div id="category-controls">
     <div id="categories"></div>
-    <input id="new-category-input" placeholder="Skriv kategori-navn og tryk Enter..." autocomplete="off" />
+    <input id="new-category-input" placeholder="Skriv kategori-navn og tryk Enter...">
   </div>
 
-  <div id="active-category-label">Ingen aktiv kategori valgt</div>
+  <div id="active-category-label"></div>
 
   <todo-form></todo-form>
   <todo-list></todo-list>
 
-<script>
-  let categories = JSON.parse(localStorage.getItem('todo-categories') || '{}');
-  let activeCategory = localStorage.getItem('active-category') || null;
+  <script>
+    let categories = JSON.parse(localStorage.getItem('todo-categories') || '{}');
+    let activeCategory = localStorage.getItem('active-category') || null;
 
-  function saveCategories() {
-    localStorage.setItem('todo-categories', JSON.stringify(categories));
-  }
+    function saveCategories() {
+      localStorage.setItem('todo-categories', JSON.stringify(categories));
+    }
 
-  function renderCategories() {
-    const container = document.getElementById('categories');
-    container.innerHTML = '';
-    Object.keys(categories).forEach(name => {
-      const cat = document.createElement('div');
-      cat.className = 'category' + (name === activeCategory ? ' active' : '');
-      cat.innerHTML = `<span>${name}</span><button title="Slet kategori">🗑️</button>`;
+    function renderCategories() {
+      const container = document.getElementById('categories');
+      container.innerHTML = '';
+      Object.keys(categories).forEach(name => {
+        const cat = document.createElement('div');
+        cat.className = 'category' + (name === activeCategory ? ' active' : '');
+        cat.innerHTML = `<span>${name}</span><button title="Slet">🗑️</button>`;
 
-      cat.querySelector('span').onclick = () => {
-        activeCategory = name;
-        localStorage.setItem('active-category', name);
-        renderCategories();
-        renderTasks();
-        updateActiveCategoryLabel();
-      };
+        cat.querySelector('span').onclick = () => {
+          activeCategory = name;
+          localStorage.setItem('active-category', name);
+          renderCategories();
+          renderTasks();
+        };
 
-      cat.querySelector('button').onclick = () => {
-        if(confirm(`Vil du slette kategorien "${name}" og alle dens opgaver?`)) {
+        cat.querySelector('button').onclick = () => {
           delete categories[name];
           if (activeCategory === name) activeCategory = null;
           saveCategories();
           renderCategories();
           renderTasks();
-          updateActiveCategoryLabel();
+        };
+
+        container.appendChild(cat);
+      });
+    }
+
+    function updateActiveCategoryLabel() {
+      const label = document.getElementById('active-category-label');
+      label.textContent = activeCategory ? `📂 ${activeCategory}` : 'Ingen aktiv kategori valgt';
+    }
+
+    document.getElementById('new-category-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        const name = e.target.value.trim();
+        if (name && !categories[name]) {
+          categories[name] = [];
+          activeCategory = name;
+          saveCategories();
+          localStorage.setItem('active-category', name);
+          renderCategories();
+          renderTasks();
         }
-      };
-
-      container.appendChild(cat);
-    });
-  }
-
-  function updateActiveCategoryLabel() {
-    const label = document.getElementById('active-category-label');
-    label.textContent = activeCategory ? `📂 ${activeCategory}` : 'Ingen aktiv kategori valgt';
-  }
-
-  document.getElementById('new-category-input').addEventListener('keypress', e => {
-    if (e.key === 'Enter') {
-      const name = e.target.value.trim();
-      if (!name) return;
-      if (categories[name]) {
-        alert('Kategori findes allerede!');
         e.target.value = '';
-        return;
       }
-      categories[name] = [];
-      activeCategory = name;
-      saveCategories();
-      localStorage.setItem('active-category', name);
-      renderCategories();
-      renderTasks();
-      updateActiveCategoryLabel();
-      e.target.value = '';
-    }
-  });
-
-  class TodoTask extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-    }
-    connectedCallback() {
-      this.render();
-    }
-    render() {
-      const text = this.getAttribute('text') || '';
-      const done = this.hasAttribute('done');
-      const time = this.getAttribute('time') || '';
-
-      this.shadowRoot.innerHTML = `
-        <style>
-          .container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          input[type="checkbox"] {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-          }
-          span.task-text {
-            flex: 1;
-            user-select: none;
-          }
-          button.time-btn,
-          button.delete-btn {
-            background: transparent;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            user-select: none;
-            padding: 0;
-            margin-left: 0.3rem;
-            line-height: 1;
-            transition: color 0.3s ease;
-          }
-          button.time-btn:hover {
-            color: #1a2fcc;
-          }
-          button.delete-btn {
-            color: var(--danger-color);
-          }
-          button.delete-btn:hover {
-            color: #ff0000;
-          }
-          span.time {
-            font-size: 0.85rem;
-            color: #555;
-            user-select: none;
-            margin-left: 0.5rem;
-            white-space: nowrap;
-          }
-          :host(.done) span.task-text {
-            text-decoration: line-through;
-            color: gray;
-            opacity: 0.7;
-          }
-          body.dark-mode :host(.done) span.task-text {
-            color: #999;
-            opacity: 0.7;
-          }
-        </style>
-        <div class="container">
-          <input type="checkbox" ${done ? 'checked' : ''} />
-          <span class="task-text">${text}</span>
-          <button class="time-btn" title="Tilføj tidspunkt">⏰</button>
-          <span class="time">${time}</span>
-          <button class="delete-btn" title="Slet opgave">🗑️</button>
-        </div>
-      `;
-
-      const checkbox = this.shadowRoot.querySelector('input[type="checkbox"]');
-      const deleteBtn = this.shadowRoot.querySelector('button.delete-btn');
-      const timeBtn = this.shadowRoot.querySelector('button.time-btn');
-      const timeSpan = this.shadowRoot.querySelector('span.time');
-
-      this.classList.toggle('done', done);
-
-      checkbox.onchange = () => {
-        this.classList.toggle('done', checkbox.checked);
-        saveTasksFromDOM();
-      };
-
-      deleteBtn.onclick = () => {
-        this.remove();
-        saveTasksFromDOM();
-      };
-
-      timeBtn.onclick = () => {
-        const newTime = prompt('Indtast tidspunkt for opgaven (f.eks. 14:30)', time);
-        if (newTime !== null) {
-          this.setAttribute('time', newTime.trim());
-          timeSpan.textContent = newTime.trim();
-          saveTasksFromDOM();
-        }
-      };
-    }
-  }
-
-  class TodoList extends HTMLElement {
-    connectedCallback() {
-      this.innerHTML = '<ul id="tasks"></ul>';
-    }
-    addTask(task) {
-      const taskEl = document.createElement('todo-task');
-      taskEl.setAttribute('text', task.text);
-      if (task.done) taskEl.setAttribute('done', '');
-      if (task.time) taskEl.setAttribute('time', task.time);
-      this.querySelector('#tasks').appendChild(taskEl);
-    }
-    clearTasks() {
-      this.querySelector('#tasks').innerHTML = '';
-    }
-  }
-
-  class TodoForm extends HTMLElement {
-    connectedCallback() {
-      this.innerHTML = `
-        <div class="form-container">
-          <input type="text" placeholder="Skriv en opgave..." autocomplete="off" />
-          <button>Tilføj</button>
-        </div>
-      `;
-      const input = this.querySelector('input');
-      const btn = this.querySelector('button');
-
-      btn.onclick = () => {
-        const val = input.value.trim();
-        if (!val) {
-          alert('Skriv venligst en opgave.');
-          return;
-        }
-        if (!activeCategory) {
-          alert('Vælg venligst en kategori først.');
-          return;
-        }
-        categories[activeCategory].push({ text: val, done: false, time: '' });
-        saveCategories();
-        renderTasks();
-        input.value = '';
-      };
-
-      input.addEventListener('keypress', e => {
-        if (e.key === 'Enter') btn.click();
-      });
-    }
-  }
-
-  function renderTasks() {
-    const list = document.querySelector('todo-list');
-    list.clearTasks();
-    if (activeCategory && categories[activeCategory]) {
-      categories[activeCategory].forEach(task => list.addTask(task));
-    }
-    updateActiveCategoryLabel();
-  }
-
-  function saveTasksFromDOM() {
-    const list = document.querySelector('todo-list');
-    const tasks = [];
-    list.querySelectorAll('todo-task').forEach(taskEl => {
-      tasks.push({
-        text: taskEl.getAttribute('text'),
-        done: taskEl.classList.contains('done'),
-        time: taskEl.getAttribute('time') || ''
-      });
     });
-    if (activeCategory) {
-      categories[activeCategory] = tasks;
-      saveCategories();
-      renderTasks();
+
+    customElements.define('todo-task', class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.innerHTML = `
+          <style>
+            .task {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 0.5rem;
+              background: inherit;
+              color: inherit;
+              outline: 1px solid var(--task-outline-color, black);
+              border-radius: 8px;
+              padding: 0.5rem 0.75rem;
+              transition: outline-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            }
+            .left {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              flex: 1;
+              word-break: break-word;
+            }
+            .icons {
+              display: flex;
+              align-items: center;
+              gap: 0.3rem;
+              flex-shrink: 0;
+            }
+            input[type="checkbox"] {
+              width: 18px;
+              height: 18px;
+              cursor: pointer;
+            }
+            button {
+              background: none;
+              border: none;
+              cursor: pointer;
+              font-size: 1.2rem;
+              color: inherit;
+              user-select: none;
+            }
+            span {
+              user-select: none;
+            }
+          </style>
+          <div class="task">
+            <div class="left">
+              <input type="checkbox" />
+              <span></span>
+            </div>
+            <div class="icons">
+              <button title="Tilføj tidspunkt">⏰</button>
+              <button title="Slet opgave">🗑️</button>
+            </div>
+          </div>
+        `;
+      }
+
+      connectedCallback() {
+        const checkbox = this.shadowRoot.querySelector('input[type="checkbox"]');
+        const span = this.shadowRoot.querySelector('span');
+        const deleteBtn = this.shadowRoot.querySelector('button[title="Slet opgave"]');
+        const timeBtn = this.shadowRoot.querySelector('button[title="Tilføj tidspunkt"]');
+
+        span.textContent = this.getAttribute('text') || this.textContent.trim();
+
+        checkbox.checked = this.hasAttribute('done');
+        this.updateStyle(checkbox.checked);
+
+        checkbox.onchange = () => {
+          if (checkbox.checked) {
+            this.setAttribute('done', '');
+          } else {
+            this.removeAttribute('done');
+          }
+          this.updateStyle(checkbox.checked);
+          saveTasks();
+        };
+
+        deleteBtn.onclick = () => {
+          this.remove();
+          if (activeCategory && categories[activeCategory]) {
+            categories[activeCategory] = categories[activeCategory].filter(t => t.text !== span.textContent);
+            saveCategories();
+            renderTasks();
+          }
+        };
+
+        timeBtn.onclick = () => {
+          const time = prompt("Hvornår vil du lave denne opgave?");
+          if (time) {
+            let baseText = this.getAttribute('text') || this.textContent.trim();
+            span.textContent = `${baseText} 🕒 ${time}`;
+            this.setAttribute('text', baseText);
+            this.setAttribute('time', time);
+            saveTasks();
+          }
+        };
+      }
+
+      updateStyle(done) {
+        const span = this.shadowRoot.querySelector('span');
+        span.style.textDecoration = done ? 'line-through' : 'none';
+        span.style.color = done ? 'gray' : 'inherit';
+      }
+    });
+
+    customElements.define('todo-list', class extends HTMLElement {
+      constructor() {
+        super();
+        this.innerHTML = '<ul id="tasks"></ul>';
+      }
+
+      addTask(text, done = false, time = '') {
+        const task = document.createElement('todo-task');
+        task.setAttribute('text', text);
+        if (done) task.setAttribute('done', '');
+        if (time) task.setAttribute('time', time);
+        this.querySelector('#tasks').appendChild(task);
+      }
+
+      clearTasks() {
+        this.querySelector('#tasks').innerHTML = '';
+      }
+    });
+
+    customElements.define('todo-form', class extends HTMLElement {
+      constructor() {
+        super();
+        this.innerHTML = `
+          <div class="form-container">
+            <input type="text" placeholder="Skriv en opgave...">
+            <button>Tilføj</button>
+          </div>
+        `;
+      }
+
+      connectedCallback() {
+        const btn = this.querySelector('button');
+        const input = this.querySelector('input');
+        btn.onclick = () => {
+          const text = input.value.trim();
+          if (text && activeCategory) {
+            categories[activeCategory].push({ text, done: false, time: '' });
+            saveCategories();
+            renderTasks();
+            input.value = '';
+            input.focus();
+          }
+        };
+
+        input.addEventListener('keypress', e => {
+          if (e.key === 'Enter') {
+            btn.click();
+          }
+        });
+      }
+    });
+
+    function renderTasks() {
+      const list = document.querySelector('todo-list');
+      list.clearTasks();
+      if (activeCategory && categories[activeCategory]) {
+        categories[activeCategory].forEach(task => {
+          if (typeof task === 'string') {
+            list.addTask(task, false, '');
+          } else {
+            list.addTask(task.text, task.done, task.time);
+          }
+        });
+      }
+      updateActiveCategoryLabel();
     }
-  }
 
-  document.getElementById('theme-toggle').onclick = () => {
-    document.body.classList.toggle('dark-mode');
-  };
+    function saveTasks() {
+      if (activeCategory && categories[activeCategory]) {
+        const allTasks = Array.from(document.querySelectorAll('todo-task')).map(t => {
+          return {
+            text: t.getAttribute('text'),
+            done: t.hasAttribute('done'),
+            time: t.getAttribute('time') || ''
+          };
+        });
+        categories[activeCategory] = allTasks;
+        saveCategories();
+      }
+    }
 
-  customElements.define('todo-task', TodoTask);
-  customElements.define('todo-list', TodoList);
-  customElements.define('todo-form', TodoForm);
+    document.getElementById('theme-toggle').onclick = () => {
+      document.body.classList.toggle('dark-mode');
+    };
 
-  renderCategories();
-  renderTasks();
-</script>
+    renderCategories();
+    renderTasks();
+  </script>
 </body>
 </html>
