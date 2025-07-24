@@ -90,22 +90,26 @@
     }
 
     .category {
-      background-color: #3b5bff;
-      color: white;
-      border-radius: 20px;
-      padding: 0.3rem 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      cursor: pointer;
-      user-select: none;
-    }
+  background-color: transparent;
+  color: inherit;
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #3b5bff; /* blå kant til ikke-aktive */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-    .category.active {
-      background-color: transparent;
-      color: inherit;
-      outline: 2px solid black;
-    }
+.category.active {
+  background-color: #28a745;  /* grøn baggrund */
+  color: white;
+  border-color: #28a745;      /* grøn kant */
+  outline: none;
+}
+
 
     body.dark-mode .category.active {
       outline: 2px solid white !important;
@@ -202,6 +206,15 @@
       padding: 0;
       margin: 0;
     }
+
+    /* Fejlbesked stil */
+    #error-message, #error-category-message {
+      color: red;
+      margin-top: 0.5rem;
+      font-weight: 600;
+      min-height: 1.2em;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -214,11 +227,14 @@
   <div id="category-controls">
     <div id="categories"></div>
     <input id="new-category-input" placeholder="Skriv kategori-navn og tryk Enter...">
+    <div id="error-category-message"></div>
   </div>
 
   <div id="active-category-label"></div>
 
   <todo-form></todo-form>
+  <div id="error-message"></div>
+
   <todo-list></todo-list>
 
   <script>
@@ -263,7 +279,12 @@
 
     document.getElementById('new-category-input').addEventListener('keypress', e => {
       if (e.key === 'Enter') {
+        const errorCategoryEl = document.getElementById('error-category-message');
         const name = e.target.value.trim();
+        if (!name) {
+          errorCategoryEl.textContent = '⚠️ Skriv venligst et kategori-navn!';
+          return;
+        }
         if (name && !categories[name]) {
           categories[name] = [];
           activeCategory = name;
@@ -271,6 +292,7 @@
           localStorage.setItem('active-category', name);
           renderCategories();
           renderTasks();
+          errorCategoryEl.textContent = '';
         }
         e.target.value = '';
       }
@@ -419,15 +441,29 @@
       connectedCallback() {
         const btn = this.querySelector('button');
         const input = this.querySelector('input');
+        const errorEl = document.getElementById('error-message');
+
         btn.onclick = () => {
           const text = input.value.trim();
-          if (text && activeCategory) {
-            categories[activeCategory].push({ text, done: false, time: '' });
-            saveCategories();
-            renderTasks();
-            input.value = '';
+
+          if (!activeCategory) {
+            errorEl.textContent = '⚠️ Vælg eller opret en kategori først!';
             input.focus();
+            return;
           }
+
+          if (!text) {
+            errorEl.textContent = '⚠️ Skriv venligst en opgave!';
+            input.focus();
+            return;
+          }
+
+          categories[activeCategory].push({ text, done: false, time: '' });
+          saveCategories();
+          renderTasks();
+          input.value = '';
+          input.focus();
+          errorEl.textContent = '';
         };
 
         input.addEventListener('keypress', e => {
