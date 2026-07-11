@@ -34,6 +34,24 @@
       --task-outline-color: white;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid #ffbf47;
+      outline-offset: 3px;
+    }
+
     h1 {
       margin: 0;
       color: black;
@@ -115,8 +133,12 @@
       outline: 2px solid white !important;
     }
 
-    .category span {
+    .category-select {
+      border: 0;
+      background: transparent;
+      color: inherit;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .category button {
@@ -253,19 +275,20 @@
   <section class="hero-intro">
     <h1>📝 Min To-Do Liste</h1>
     <p class="subtitle">Organiser dine opgaver og kategorier nemt og hurtigt.</p>
-    <button id="theme-toggle">🌘 Skift Tema</button>
+    <button id="theme-toggle" type="button" aria-pressed="false">🌘 Skift tema</button>
   </section>
 
   <div id="category-controls">
     <div id="categories"></div>
-    <input id="new-category-input" placeholder="Skriv kategori-navn og tryk Enter...">
-    <div id="error-category-message"></div>
+    <label class="sr-only" for="new-category-input">Ny kategori</label>
+    <input id="new-category-input" placeholder="Skriv kategorinavn og tryk Enter...">
+    <div id="error-category-message" role="alert"></div>
   </div>
 
-  <div id="active-category-label"></div>
+  <div id="active-category-label" role="status" aria-live="polite"></div>
 
   <todo-form></todo-form>
-  <div id="error-message"></div>
+  <div id="error-message" role="alert"></div>
 
   <todo-list></todo-list>
 
@@ -283,16 +306,16 @@
       Object.keys(categories).forEach(name => {
         const cat = document.createElement('div');
         cat.className = 'category' + (name === activeCategory ? ' active' : '');
-        cat.innerHTML = `<span>${name}</span><button title="Slet">🗑️</button>`;
+        cat.innerHTML = `<button type="button" class="category-select">${name}</button><button type="button" class="category-delete" aria-label="Slet kategorien ${name}">🗑️</button>`;
 
-        cat.querySelector('span').onclick = () => {
+        cat.querySelector('.category-select').onclick = () => {
           activeCategory = name;
           localStorage.setItem('active-category', name);
           renderCategories();
           renderTasks();
         };
 
-        cat.querySelector('button').onclick = () => {
+        cat.querySelector('.category-delete').onclick = () => {
           delete categories[name];
           if (activeCategory === name) activeCategory = null;
           saveCategories();
@@ -380,12 +403,12 @@
           </style>
           <div class="task">
             <div class="left">
-              <input type="checkbox" />
+              <input type="checkbox" aria-label="Marker opgaven som færdig" />
               <span></span>
             </div>
             <div class="icons">
-              <button title="Tilføj tidspunkt">⏰</button>
-              <button title="Slet opgave">🗑️</button>
+              <button type="button" title="Tilføj tidspunkt" aria-label="Tilføj tidspunkt">⏰</button>
+              <button type="button" title="Slet opgave" aria-label="Slet opgave">🗑️</button>
             </div>
           </div>
         `;
@@ -464,8 +487,9 @@
         super();
         this.innerHTML = `
           <div class="form-container">
-            <input type="text" placeholder="Skriv en opgave...">
-            <button>Tilføj</button>
+            <label class="sr-only" for="new-task-input">Ny opgave</label>
+            <input id="new-task-input" type="text" placeholder="Skriv en opgave...">
+            <button type="button">Tilføj</button>
           </div>
         `;
       }
@@ -537,6 +561,8 @@
 
     document.getElementById('theme-toggle').onclick = () => {
       document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      document.getElementById('theme-toggle').setAttribute('aria-pressed', String(isDark));
     };
 
     renderCategories();
